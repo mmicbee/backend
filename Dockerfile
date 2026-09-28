@@ -1,33 +1,30 @@
-# ====== Build stage ======
-FROM maven:3.9.9-eclipse-temurin-21 AS build
-
+# ---------- Build stage ----------
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy pom.xml and download dependencies first (for layer caching)
+# Cache dependencies first
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN mvn -q dependency:go-offline
 
-# Now copy the source code and build the jar
-COPY src src
-RUN mvn clean package -DskipTests
+# Build the application
+COPY src ./src
+RUN mvn -q package -DskipTests
 
-# ====== Run stage ======
-FROM eclipse-temurin:21-jre-alpine
-
+# ---------- Runtime stage ----------
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Add non-root user
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Create a non-root user and a writable logs directory
+RUN groupadd --system app && useradd --system --gid app --home /app app \
+    && mkdir -p /app/logs \
+    && chown -R app:app /app
 
-# Copy jar from the build stage
-COPY --from=build /app/target/*.jar app.jar
+# Copy the built jar
+COPY --from=build --chown=app:app /app/target/*.jar app.jar
 
-# Expose Spring Boot port
+USER app
+
 EXPOSE 8080
 
-# Health check (requires Spring Boot actuator enabled)
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Keep memory within Render's small instances
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]

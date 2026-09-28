@@ -1,0 +1,11 @@
+# Spring Security & JWT
+export SPRING_SECURITY_USERNAME=admin
+export SPRING_SECURITY_PASSWORD=your_password_here
+export JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+export JWT_EXPIRATION=86400000
+
+# Database Configuration (PostgreSQL)
+export SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/lms_db
+export SPRING_DATASOURCE_USERNAME=postgres
+export SPRING_DATASOURCE_PASSWORD=postgres

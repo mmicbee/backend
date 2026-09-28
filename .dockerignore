@@ -1,0 +1,35 @@
+# Git and developer files
+.git
+.gitignore
+.dockerignore
+README.md
+CHANGELOG.md
+
+# Build artifacts
+target/
+*.jar
+*.war
+
+# Environment and Secrets (CRITICAL: Never bake into Docker images)
+.env
+.env.*
+*.env
+env.properties
+src/main/resources/application-env.properties
+src/main/resources/application-dev.properties
+*.pem
+*.key
+*.p12
+*.jks
+
+# Logs
+logs/
+*.log
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath

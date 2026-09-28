@@ -1,0 +1,1844 @@
+openapi: 3.0.3
+info:
+  title: LMS Backend API
+  description: Learning Management System API for institutions, students, teachers, courses, and enrollment management
+  version: 1.0.0
+  contact:
+    name: LMS API Support
+    email: support@lms.com
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoints
+
+  schemas:
+    # Authentication Models
+    InstitutionRegisterRequest:
+      type: object
+      required:
+        - institutionName
+        - registrationNumber
+        - schoolType
+        - educationSystem
+        - location
+        - email
+        - phone
+        - password
+      properties:
+        institutionName:
+          type: string
+          example: "zone01kisumu Academy"
+        registrationNumber:
+          type: string
+          example: "REG123456"
+        schoolType:
+          type: string
+          example: "secondary"
+        educationSystem:
+          type: string
+          example: "CBC"
+        location:
+          type: string
+          example: "Kisumu"
+        email:
+          type: string
+          format: email
+          example: "zone01kisumu@example.com"
+        phone:
+          type: string
+          example: "0768744700"
+        password:
+          type: string
+          example: "SecurePass123"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    StudentRegisterRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - phone
+        - password
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        phone:
+          type: string
+          example: "0712345678"
+        password:
+          type: string
+          example: "securePass123"
+
+    TeacherRegisterRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - phone
+        - password
+        - professionalLevel
+        - certification
+        - yearOfExperience
+        - course
+        - language
+      properties:
+        firstName:
+          type: string
+          example: "Mary"
+        lastName:
+          type: string
+          example: "Smith"
+        email:
+          type: string
+          format: email
+          example: "mary.smith@example.com"
+        phone:
+          type: string
+          example: "0798765432"
+        password:
+          type: string
+          example: "teacherPass123"
+        professionalLevel:
+          type: string
+          example: "Senior"
+        certification:
+          type: string
+          example: "PGDE"
+        profilePicture:
+          type: string
+          example: "http://example.com/pic.jpg"
+        bio:
+          type: string
+          example: "Experienced teacher"
+        yearOfExperience:
+          type: integer
+          example: 5
+        course:
+          type: string
+          example: "Mathematics"
+        language:
+          type: string
+          example: "English"
+
+    # Course Models
+    CourseCreateRequest:
+      type: object
+      required:
+        - title
+        - category
+        - duration
+        - mode
+        - price
+      properties:
+        title:
+          type: string
+          example: "Java Programming"
+        description:
+          type: string
+          example: "A complete guide to Java SE"
+        category:
+          type: string
+          enum: [SCIENCE_AND_TECHNOLOGY, ARTS_AND_DESIGN, BUSINESS, LANGUAGES, MARKETING, SOFTWARE_AND_DATA, HEALTH_AND_FITNESS, MEDIA_AND_ENTERTAINMENT, OTHERS]
+          example: "SCIENCE_AND_TECHNOLOGY"
+        duration:
+          type: integer
+          description: "Duration value for the course. Unit = weeks (use integer). For LIVE courses the service computes endDate as startDate + duration weeks. For RECORDED courses duration is used for informational purposes."
+          example: 12
+        startDate:
+          type: string
+          format: date-time
+          example: "2025-08-01T09:00:00"
+        endDate:
+          type: string
+          format: date-time
+          example: "2025-11-01T17:00:00"
+        mode:
+          type: string
+          enum: [LIVE, RECORDED]
+          example: "LIVE"
+        price:
+          type: number
+          format: float
+          example: 199.99
+        teacherId:
+          type: integer
+          example: 1
+        paymentMethod:
+          type: string
+          description: "Payment method for paid courses. If price is 0 (free course), paymentMethod may be omitted. Allowed values: MPESA, CREDIT_CARD, PAYPAL, BANK_TRANSFER."
+          enum: [MPESA, CREDIT_CARD, PAYPAL, BANK_TRANSFER]
+          example: "CREDIT_CARD"
+        mpesaPaymentType:
+          type: string
+          enum: [PAYBILL, TILL]
+          example: "PAYBILL"
+        paybillNumber:
+          type: string
+          example: "123456"
+        paymentAccount:
+          type: string
+          example: "4111-1111-1111-1111"
+        status:
+          type: string
+          description: "Course lifecycle status. OPEN = available for enrollment; STARTED = active/live; COMPLETED = finished; CANCELLED/CLOSED as appropriate."
+          enum: [OPEN, STARTED, COMPLETED, CANCELLED, CLOSED]
+          example: "OPEN"
+
+        # Hierarchy suggestion: course contains lessons which contain topics. For clarity in front-end documentation, prefer: Course -> Lesson -> topic (only one course title per course resource).
+
+    CourseResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Java Programming"
+        description:
+          type: string
+          example: "A complete guide to Java SE"
+        duration:
+          type: integer
+          description: "Duration in weeks for LIVE courses; can be informational for RECORDED courses."
+          example: 12
+        startDate:
+          type: string
+          format: date-time
+          example: "2025-08-01T09:00:00"
+        endDate:
+          type: string
+          format: date-time
+          example: "2025-11-01T17:00:00"
+        mode:
+          type: string
+          enum: [LIVE, RECORDED]
+          example: "LIVE"
+        price:
+          type: number
+          format: float
+          example: 199.99
+        teacherId:
+          type: integer
+          example: 1
+        paymentMethod:
+          type: string
+          description: "Payment method for paid courses. For free courses (price = 0) this may be null/omitted."
+          enum: [MPESA, CREDIT_CARD, PAYPAL, BANK_TRANSFER]
+          example: "CREDIT_CARD"
+        mpesaPaymentType:
+          type: string
+          enum: [PAYBILL, TILL]
+          example: "PAYBILL"
+        paybillNumber:
+          type: string
+          example: "123456"
+        paymentAccount:
+          type: string
+          example: "4111-1111-1111-1111"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-07-20T10:00:00"
+        status:
+          type: string
+          enum: [OPEN, STARTED, COMPLETED, CANCELLED, CLOSED]
+          example: "OPEN"
+        category:
+          type: string
+          example: "SCIENCE_AND_TECHNOLOGY"
+
+    # Course Topic Models
+    CourseTopicRequest:
+      type: object
+      required:
+        - title
+        - description
+        - totalExpectedLessons
+        - contentType
+        - duration
+      properties:
+        title:
+          type: string
+          example: "Introduction to Java"
+        description:
+          type: string
+          example: "Basics of Java programming"
+        totalExpectedLessons:
+          type: integer
+          example: 1
+        contentType:
+          type: string
+          enum: [VIDEO, DOCUMENT, INTERACTIVE]
+          example: "VIDEO"
+        contentUrl:
+          type: string
+          example: "https://zone01kisumu.com/videos/java-intro.mp4"
+        duration:
+          type: integer
+          example: 60
+
+    # Enrollment Models
+    EnrollmentRequest:
+      type: object
+      required:
+        - studentId
+        - courseId
+        - enrollmentDate
+        - paymentStatus
+        - amountPaidNow
+        - paymentMethod
+      properties:
+        studentId:
+          type: integer
+          example: 1
+        courseId:
+          type: integer
+          example: 1
+        enrollmentDate:
+          type: string
+          format: date-time
+          example: "2025-08-20T00:00:00"
+        paymentStatus:
+          type: string
+          enum: [PENDING, PARTIALLY_PAID, COMPLETED, FAILED]
+          example: "PENDING"
+        amountPaidNow:
+          type: number
+          format: float
+          example: 0.0
+        paymentMethod:
+          type: string
+          enum: [MPESA, CREDIT_CARD, PAYPAL, BANK_TRANSFER]
+          example: "CREDIT_CARD"
+
+    PaymentUpdateRequest:
+      type: object
+      required:
+        - amountPaidNow
+      properties:
+        amountPaidNow:
+          type: number
+          format: float
+          example: 100.0
+
+    # Progress Models
+    AttendanceRequest:
+      type: object
+      required:
+        - studentId
+        - courseLessonId
+        - attendanceStatus
+        - markedBy
+      properties:
+        studentId:
+          type: integer
+          example: 1
+        courseLessonId:
+          type: integer
+          example: 1
+        attendanceStatus:
+          type: string
+          enum: [PRESENT, ABSENT, LATE]
+          example: "PRESENT"
+        markedBy:
+          type: string
+          enum: [TEACHER, SYSTEM, STUDENT]
+          example: "TEACHER"
+
+    # Lesson Models
+    CourseLessonRequest:
+      type: object
+      required:
+        - courseId
+        - topicId
+        - LessonName
+        - LessonDate
+        - duration
+      properties:
+        courseId:
+          type: integer
+          example: 1
+        topicId:
+          type: integer
+          example: 1
+        LessonName:
+          type: string
+          example: "Introduction to Java"
+        LessonDate:
+          type: string
+          format: date-time
+          example: "2025-08-22T10:00:00"
+        contentUrl:
+          type: string
+          example: "https://zone01kisumu.com/videos/java-intro.mp4"
+        duration:
+          type: integer
+          example: 90
+
+    CourseLessonResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        courseId:
+          type: integer
+          example: 1
+        topicId:
+          type: integer
+          example: 1
+        LessonName:
+          type: string
+          example: "Introduction to Java"
+        LessonDate:
+          type: string
+          format: date-time
+          example: "2025-08-22T10:00:00"
+        contentUrl:
+          type: string
+          example: "https://zone01kisumu.com/videos/java-intro.mp4"
+        duration:
+          type: integer
+          example: 90
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-08-20T10:00:00"
+
+    # Payment Models
+    PaymentInitializeRequest:
+      type: object
+      required:
+        - studentId
+        - courseId
+        - amount
+        - email
+        - callbackUrl
+        - paymentMethod
+      properties:
+        studentId:
+          type: integer
+          example: 1
+        courseId:
+          type: integer
+          example: 1
+        amount:
+          type: number
+          format: float
+          example: 50.00
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        callbackUrl:
+          type: string
+          example: "https://callback-url.com"
+        paymentMethod:
+          type: string
+          enum: [MPESA, CREDIT_CARD, BANK_TRANSFER, PAYPAL]
+          example: "CREDIT_CARD"
+
+    STKPushRequest:
+      type: object
+      required:
+        - courseId
+        - studentId
+        - amount
+        - phoneNumber
+      properties:
+        courseId:
+          type: integer
+          example: 1
+        studentId:
+          type: integer
+          example: 123
+        amount:
+          type: number
+          format: float
+          example: 100.00
+        phoneNumber:
+          type: string
+          example: "2547xxxxxxxx"
+
+    # Generic Response Models
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+paths:
+  # Authentication Endpoints
+  /api/auth/register/institution:
+    post:
+      tags:
+        - Institution Authentication
+      summary: Register a new institution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionRegisterRequest'
+      responses:
+        '201':
+          description: Institution registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/login/institution:
+    post:
+      tags:
+        - Institution Authentication
+      summary: Login institution and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/student/register:
+    post:
+      tags:
+        - Student Authentication
+      summary: Register a new student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentRegisterRequest'
+      responses:
+        '201':
+          description: Student registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/student/login:
+    post:
+      tags:
+        - Student Authentication
+      summary: Login student and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/teacher/register:
+    post:
+      tags:
+        - Teacher Authentication
+      summary: Register a new teacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherRegisterRequest'
+      responses:
+        '201':
+          description: Teacher registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/teacher/login:
+    post:
+      tags:
+        - Teacher Authentication
+      summary: Login teacher and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Course Endpoints
+  /api/courses:
+    post:
+      tags:
+        - Courses
+      summary: Create a new course
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreateRequest'
+      responses:
+        '201':
+          description: Course created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Courses
+      summary: Get all courses
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/courses/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Get course by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Courses
+      summary: Update an existing course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreateRequest'
+      responses:
+        '200':
+          description: Course updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Courses
+      summary: Delete a course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '204':
+          description: Course deleted successfully
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Course Topic Endpoints
+  /api/courses/{courseId}/topics:
+    post:
+      tags:
+        - Course topics
+      summary: Create new course topic
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseTopicRequest'
+      responses:
+        '201':
+          description: Course topic created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Course topics
+      summary: List topics for course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: List of course topics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/courses/{courseId}/topics/{topicId}:
+    get:
+      tags:
+        - Course topics
+      summary: Get specific topic
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: topic ID
+      responses:
+        '200':
+          description: Course topic details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: topic not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Course topics
+      summary: Update topic
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: topic ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseTopicRequest'
+      responses:
+        '200':
+          description: topic updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: topic not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Course topics
+      summary: Delete topic
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+        - name: topicId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: topic ID
+      responses:
+        '204':
+          description: Topic deleted successfully
+        '404':
+          description: Topic not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/courses/{courseId}/topics/total-duration:
+    get:
+      tags:
+        - Course topics
+      summary: Get total duration of all topics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: Total duration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Enrollment Endpoints
+  /api/enrollments:
+    post:
+      tags:
+        - Enrollments
+      summary: Enroll a student
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollmentRequest'
+      responses:
+        '201':
+          description: Student enrolled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/enrollments/student/{studentId}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get enrollments by student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+      responses:
+        '200':
+          description: Student enrollments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/enrollments/course/{courseId}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get enrollments by course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: Course enrollments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/enrollments/student/{studentId}/course/{courseId}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get specific enrollment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: Enrollment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Enrollment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/enrollments/student/{studentId}/course/{courseId}/payment:
+    put:
+      tags:
+        - Enrollments
+      summary: Update payment status for an enrollment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentUpdateRequest'
+      responses:
+        '200':
+          description: Payment status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Enrollment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/enrollments/course/{courseId}/count:
+    get:
+      tags:
+        - Enrollments
+      summary: Count completed enrollments in course
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: Enrollment count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/enrollments/teacher/{teacherId}:
+    get:
+      tags:
+        - Enrollments
+      summary: Get enrollments for teacher's courses
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Teacher ID
+      responses:
+        '200':
+          description: Teacher's course enrollments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Progress Endpoints
+  /api/progress/mark-attendance:
+    post:
+      tags:
+        - Course Progress
+      summary: Mark attendance for a student in a Lesson
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceRequest'
+      responses:
+        '200':
+          description: Attendance marked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/progress/student-Topic-progress:
+    get:
+      tags:
+        - Course Progress
+      summary: Get progress of a student in a specific topic
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+        - name: topicId
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: topic ID
+      responses:
+        '200':
+          description: Student topic progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/progress/student-overall-progress:
+    get:
+      tags:
+        - Course Progress
+      summary: Get overall course progress for a student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Student ID
+        - name: courseId
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Course ID
+      responses:
+        '200':
+          description: Student overall progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Lesson Endpoints
+  /api/Lessons:
+    post:
+      tags:
+        - Course Lessons
+      summary: Create/schedule a new course Lesson
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseLessonRequest'
+      responses:
+        '201':
+          description: Course Lesson created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Course Lessons
+      summary: Get all course lessons
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of course lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseLessonResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/Lessons/{id}:
+    get:
+      tags:
+        - Course Lessons
+      summary: Get course lesson by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course Lesson ID
+      responses:
+        '200':
+          description: Course Lesson details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseLessonResponse'
+        '404':
+          description: Course Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Course Lessons
+      summary: Update a course lesson by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course Lesson ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseLessonRequest'
+      responses:
+        '200':
+          description: Course Lesson updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Course Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Course Lessons
+      summary: Delete a course lesson by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Course Lesson ID
+      responses:
+        '204':
+          description: Course Lesson deleted successfully
+        '404':
+          description: Course Lesson not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Payment Endpoints
+  /api/payments/initialize:
+    post:
+      tags:
+        - Payments
+      summary: Initialize a payment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentInitializeRequest'
+      responses:
+        '200':
+          description: Payment initialized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/payments/verify/{reference}:
+    get:
+      tags:
+        - Payments
+      summary: Verify the payment status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Payment reference
+          example: "PAY_ABC123XYZ"
+      responses:
+        '200':
+          description: Payment verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/payments/webhook:
+    post:
+      tags:
+        - Payments
+      summary: Paystack webhook endpoint
+      description: Webhook endpoint for Paystack to notify payment status changes
+      parameters:
+        - name: x-paystack-signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Paystack signature for webhook verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  example: "charge.success"
+                data:
+                  type: object
+                  properties:
+                    reference:
+                      type: string
+                      example: "PAY_ABC123XYZ"
+                    status:
+                      type: string
+                      example: "success"
+                    amount:
+                      type: integer
+                      example: 5000
+                    currency:
+                      type: string
+                      example: "NGN"
+                    customer:
+                      type: object
+                      properties:
+                        email:
+                          type: string
+                          example: "john.doe@example.com"
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid webhook data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/payments/{reference}:
+    get:
+      tags:
+        - Payments
+      summary: Fetch payment by reference
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Payment reference
+          example: "PAY_ABC123XYZ"
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mpesa/stk-push:
+    post:
+      tags:
+        - M-Pesa Payments
+      summary: Initiate an M-Pesa STK Push
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/STKPushRequest'
+      responses:
+        '200':
+          description: STK Push initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mpesa/callback:
+    post:
+      tags:
+        - M-Pesa Payments
+      summary: M-Pesa callback endpoint
+      description: Webhook endpoint for M-Pesa to notify payment status changes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid webhook data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mpesa/timeout:
+    post:
+      tags:
+        - M-Pesa Payments
+      summary: M-Pesa timeout endpoint
+      description: Webhook endpoint for M-Pesa to notify of a transaction timeout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid webhook data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mpesa/transaction-status/{checkoutRequestId}:
+    get:
+      tags:
+        - M-Pesa Payments
+      summary: Check M-Pesa transaction status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: checkoutRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: M-Pesa checkout request ID
+          example: "ws_CO_071020251229235235"
+      responses:
+        '200':
+          description: Transaction status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/mpesa/debug-config:
+    get:
+      tags:
+        - M-Pesa Payments
+      summary: Get M-Pesa debug configuration
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: M-Pesa debug configuration
+          content:
+            application/json:
+              schema:
+                type: object
+
+tags:
+  - name: Institution Authentication
+    description: Authentication endpoints for educational institutions
+  - name: Student Authentication
+    description: Authentication endpoints for students
+  - name: Teacher Authentication
+    description: Authentication endpoints for teachers
+  - name: Courses
+    description: Course management endpoints
+  - name: Course Topics
+    description: Course Topic and curriculum management
+  - name: Enrollments
+    description: Student enrollment management
+  - name: Course Progress
+    description: Student progress and attendance tracking
+  - name: Course Lessons
+    description: Course Lesson scheduling and management
+  - name: Payments
+    description: Payment processing and management
+  - name: M-Pesa Payments
+    description: M-Pesa payment processing endpoints

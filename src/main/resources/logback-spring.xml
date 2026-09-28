@@ -7,8 +7,8 @@
         </encoder>
     </appender>
 
-    <springProfile name="prod">
-        <!-- File appender with rolling policy -->
+    <!-- Local / non-production: also log to files -->
+    <springProfile name="!prod">
         <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>logs/lms-backend.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -22,7 +22,6 @@
             </encoder>
         </appender>
 
-        <!-- Separate error log file for runtime errors only -->
         <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>logs/lms-backend-errors.log</file>
             <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -32,7 +31,7 @@
                 <fileNamePattern>logs/lms-backend-errors.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
                 <maxFileSize>10MB</maxFileSize>
                 <maxHistory>30</maxHistory>
-                <totalSizeCap>500MB</totalSizeCap>
+                <totalSizeCap>1GB</totalSizeCap>
             </rollingPolicy>
             <encoder>
                 <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %replace(%msg){'(?i)(sk_(?:live|test)_[a-zA-Z0-9]+|(?:Bearer|Basic)\s+[A-Za-z0-9_\-\.\+/=]+|(?:PAYSTACK_SECRET_KEY|MPESA_CONSUMER_SECRET|MPESA_PASSKEY|MPESA_SECURITY_CREDENTIAL|secretKey|appSecret|passkey)[=:][^\s,]+)','[PROTECTED]'}%n%ex{full}</pattern>
@@ -40,31 +39,23 @@
         </appender>
 
         <root level="INFO">
-            <appender-ref ref="CONSOLE" />
-            <appender-ref ref="FILE" />
-            <appender-ref ref="ERROR_FILE" />
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
         </root>
     </springProfile>
 
+    <!-- Production (Render): console only, Render captures stdout -->
     <springProfile name="prod">
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </root>
-</springProfile>
-
-<springProfile name="!prod">
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="ERROR_FILE"/>
-    </root>
-</springProfile>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 
     <!-- Specific loggers -->
     <logger name="com.zone01kisumu.backend" level="DEBUG" />
     <logger name="org.springframework.security" level="INFO" />
     <logger name="org.hibernate" level="WARN" />
-    <!-- Ensure HTTP clients do not log sensitive payment authorization headers -->
     <logger name="org.springframework.web.client.RestTemplate" level="INFO" />
     <logger name="org.apache.http" level="INFO" />
     <logger name="okhttp3" level="INFO" />

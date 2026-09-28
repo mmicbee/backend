@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <springProfile name="dev">
+    <springProfile name="prod">
         <!-- File appender with rolling policy -->
         <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
             <file>logs/lms-backend.log</file>
@@ -46,12 +46,19 @@
         </root>
     </springProfile>
 
-    <springProfile name="!dev">
-        <!-- Root logger for all other profiles (e.g., prod) -->
-        <root level="INFO">
-            <appender-ref ref="CONSOLE" />
-        </root>
-    </springProfile>
+    <springProfile name="prod">
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</springProfile>
+
+<springProfile name="!prod">
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+</springProfile>
 
     <!-- Specific loggers -->
     <logger name="com.zone01kisumu.backend" level="DEBUG" />

@@ -27,7 +27,8 @@ public class HealthController {
         response.put("status", "UP");
         response.put("service", "Ujuzi360 LMS Backend API");
         response.put("frontendUrl", "http://localhost:5173");
-        response.put("message", "Backend is running successfully. Access the frontend application at http://localhost:5173");
+        response.put("message", "Backend is running successfully. "
+                + "Access the frontend application at http://localhost:5173");
         response.put("timestamp", new Date());
         return ResponseEntity.ok(response);
     }

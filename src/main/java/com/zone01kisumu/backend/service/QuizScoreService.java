@@ -50,7 +50,8 @@ public class QuizScoreService {
         }
 
         Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + request.getStudentId()));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Student not found with ID: " + request.getStudentId()));
 
         double maxScore = (request.getMaxScore() != null && request.getMaxScore() > 0)
                 ? request.getMaxScore()

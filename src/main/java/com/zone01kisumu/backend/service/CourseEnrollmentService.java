@@ -73,7 +73,9 @@ public class CourseEnrollmentService {
             enrollment.setPaymentStatus(status);
             enrollment.setAmountPaid(BigDecimal.ZERO);
         } else if (isPendingPayment || amountPaid.compareTo(BigDecimal.ZERO) <= 0) {
-            if (!isPendingPayment && (dto.getAmountPaidNow() == null || dto.getAmountPaidNow().compareTo(BigDecimal.ZERO) <= 0)) {
+            boolean hasNoPayment = dto.getAmountPaidNow() == null
+                    || dto.getAmountPaidNow().compareTo(BigDecimal.ZERO) <= 0;
+            if (!isPendingPayment && hasNoPayment) {
                 throw new IllegalArgumentException("You must make a payment to enroll in this course.");
             }
             enrollment.setPaymentStatus(PaymentStatus.PENDING);

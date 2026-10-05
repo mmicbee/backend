@@ -14,9 +14,9 @@ RUN mvn -q package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Create a non-root user and a writable logs directory
+# Create a non-root user and writable directories
 RUN groupadd --system app && useradd --system --gid app --home /app app \
-    && mkdir -p /app/logs \
+    && mkdir -p /app/logs /app/uploads /app/backups \
     && chown -R app:app /app
 
 # Copy the built jar

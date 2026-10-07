@@ -22,10 +22,25 @@ class WebConfigTest {
 
         // Assert
         assertTrue(registry.wasConfigured);
-        assertEquals(List.of("http://localhost:*"), registry.origins);
+        assertTrue(registry.origins.contains("http://localhost:*"));
+        assertTrue(registry.origins.contains("https://lms-ujuzi.vercel.app"));
         assertEquals(List.of("*"), registry.methods);
         assertEquals("*", registry.headers);
         assertTrue(registry.credentials);
+    }
+
+    @Test
+    void addCorsMappings_shouldIncludeCustomAllowedOrigins() {
+        WebConfig config = new WebConfig();
+        config.setAllowedOrigins("https://example.com, https://another.com");
+        TestCorsRegistry registry = new TestCorsRegistry();
+
+        config.addCorsMappings(registry);
+
+        assertTrue(registry.wasConfigured);
+        assertTrue(registry.origins.contains("https://example.com"));
+        assertTrue(registry.origins.contains("https://another.com"));
+        assertFalse(registry.origins.contains("https://lms-ujuzi.vercel.app"));
     }
 
     // Fake CorsRegistry for tracking calls

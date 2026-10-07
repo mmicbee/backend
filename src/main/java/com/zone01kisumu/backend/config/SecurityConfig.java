@@ -1,8 +1,12 @@
 package com.zone01kisumu.backend.config;
 
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -44,6 +48,13 @@ public class SecurityConfig {
         private final TeacherAuthService teacherAuthService;
         private final InstitutionService institutionService;
         private final ObjectMapper objectMapper;
+
+        @Value("${cors.allowedOrigins:http://localhost:5173,http://localhost:3000,https://lms-ujuzi.vercel.app}")
+        private String allowedOrigins = "http://localhost:5173,http://localhost:3000,https://lms-ujuzi.vercel.app";
+
+        public void setAllowedOrigins(String allowedOrigins) {
+                this.allowedOrigins = allowedOrigins;
+        }
 
         @Bean
         public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
@@ -172,20 +183,39 @@ public class SecurityConfig {
                 return http.build();
         }
 
+        private List<String> resolveAllowedOriginPatterns() {
+                Set<String> patterns = new LinkedHashSet<>();
+                patterns.add("http://localhost:*");
+                patterns.add("http://127.0.0.1:*");
+
+                if (allowedOrigins != null && !allowedOrigins.isBlank()) {
+                        for (String origin : allowedOrigins.split(",")) {
+                                String trimmed = origin.trim();
+                                if (!trimmed.isEmpty()) {
+                                        patterns.add(trimmed);
+                                }
+                        }
+                }
+                return new ArrayList<>(patterns);
+        }
+
         @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
-        configuration.setAllowedMethods(List.of("*"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+                configuration.setAllowedOriginPatterns(resolveAllowedOriginPatterns());
+                configuration.setAllowedMethods(
+                                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+                configuration.setAllowedHeaders(List.of("*"));
+                configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "X-Total-Count"));
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+                UrlBasedCorsConfigurationSource source =
+                                new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+                source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+                return source;
+        }
 }

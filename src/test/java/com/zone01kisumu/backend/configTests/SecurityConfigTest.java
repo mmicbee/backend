@@ -16,7 +16,17 @@ import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -78,5 +88,83 @@ class SecurityConfigTest {
         assertNotNull(chain);
 
         verify(httpSecurity).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Test
+    void testCorsConfigurationSource_defaultPatterns() {
+        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+        assertNotNull(source);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/courses");
+        CorsConfiguration config = source.getCorsConfiguration(request);
+
+        assertNotNull(config);
+        assertTrue(config.getAllowCredentials());
+        assertTrue(config.getAllowedOriginPatterns().contains("http://localhost:*"));
+        assertTrue(config.getAllowedOriginPatterns().contains("http://127.0.0.1:*"));
+        assertTrue(config.getAllowedOriginPatterns().contains("https://lms-ujuzi.vercel.app"));
+    }
+
+    @Test
+    void testCorsConfigurationSource_customOrigins() {
+        securityConfig.setAllowedOrigins("https://example.com, https://another.com");
+        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+        assertNotNull(source);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/courses");
+        CorsConfiguration config = source.getCorsConfiguration(request);
+
+        assertNotNull(config);
+        assertTrue(config.getAllowedOriginPatterns().contains("https://example.com"));
+        assertTrue(config.getAllowedOriginPatterns().contains("https://another.com"));
+    }
+
+    @Test
+    void preflightFromDeployedFrontendReturnsCorsHeaders() throws Exception {
+        CorsFilter filter = new CorsFilter(securityConfig.corsConfigurationSource());
+        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/courses");
+        request.addHeader("Origin", "https://lms-ujuzi.vercel.app");
+        request.addHeader("Access-Control-Request-Method", "GET");
+        request.addHeader("Access-Control-Request-Headers", "authorization,content-type");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertEquals(200, response.getStatus());
+        assertEquals("https://lms-ujuzi.vercel.app", response.getHeader("Access-Control-Allow-Origin"));
+        assertEquals("true", response.getHeader("Access-Control-Allow-Credentials"));
+        assertTrue(response.getHeader("Access-Control-Allow-Headers").contains("authorization"));
+    }
+
+    @Test
+    void registrationPreflightFromDeployedFrontendReturnsCorsHeaders() throws Exception {
+        CorsFilter filter = new CorsFilter(securityConfig.corsConfigurationSource());
+        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/auth/student/register");
+        request.addHeader("Origin", "https://lms-ujuzi.vercel.app");
+        request.addHeader("Access-Control-Request-Method", "POST");
+        request.addHeader("Access-Control-Request-Headers", "content-type");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertEquals(200, response.getStatus());
+        assertEquals("https://lms-ujuzi.vercel.app", response.getHeader("Access-Control-Allow-Origin"));
+        assertTrue(response.getHeader("Access-Control-Allow-Methods").contains("POST"));
+    }
+
+    @Test
+    void preflightFromUnknownOriginIsRejected() throws Exception {
+        CorsFilter filter = new CorsFilter(securityConfig.corsConfigurationSource());
+        MockHttpServletRequest request = new MockHttpServletRequest("OPTIONS", "/api/courses");
+        request.addHeader("Origin", "https://another-site.vercel.app");
+        request.addHeader("Access-Control-Request-Method", "GET");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertEquals(403, response.getStatus());
+        assertNull(response.getHeader("Access-Control-Allow-Origin"));
     }
 }
